@@ -77,6 +77,23 @@
     .b-pend{background:rgba(245,158,11,.15); color:var(--pend)}
     .empty{color:var(--muted); text-align:center; padding:30px 10px}
     .foot{color:var(--muted); font-size:12px; text-align:center; margin-top:24px}
+    .credit{color:var(--muted); font-size:12px; text-align:center; margin-top:6px}
+    .credit a{color:var(--accent); text-decoration:none; font-weight:700}
+    .credit a:hover{text-decoration:underline}
+    /* Listado de egresos */
+    .egr-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+    table.egr{width:100%; border-collapse:collapse; font-size:14px; min-width:520px}
+    table.egr th{text-align:left; color:var(--muted); font-weight:700; font-size:12px;
+      text-transform:uppercase; letter-spacing:.4px; padding:8px 10px; border-bottom:1px solid var(--line)}
+    table.egr td{padding:10px; border-bottom:1px solid var(--line); color:var(--text)}
+    table.egr td.num{text-align:right; white-space:nowrap}
+    table.egr td.usd{text-align:right; color:var(--accent); font-weight:700; white-space:nowrap}
+    table.egr tr:last-child td{border-bottom:none}
+    .cat{display:inline-block; background:rgba(255,255,255,.06); border:1px solid var(--line);
+      border-radius:999px; padding:2px 9px; font-size:12px; color:var(--muted)}
+    .egr-total{display:flex; justify-content:flex-end; gap:10px; align-items:baseline;
+      margin-top:12px; font-size:14px; color:var(--muted)}
+    .egr-total b{color:var(--accent); font-size:18px}
   </style>
 </head>
 <body>
@@ -92,6 +109,19 @@
       <p style="color:#7e88a6; font-size:11px; margin:10px 2px 0">Solo se cuentan donaciones verificadas. El consolidado en USD usa el tipo de cambio cargado manualmente.</p>
     </div>
 
+    <div id="egresos" class="raised" style="display:none">
+      <h2>En qué se gastó el dinero</h2>
+      <div class="egr-scroll">
+        <table class="egr">
+          <thead>
+            <tr><th>Fecha</th><th>Comercio</th><th>Categoría</th><th>Monto</th><th>En USD</th></tr>
+          </thead>
+          <tbody id="egrBody"></tbody>
+        </table>
+      </div>
+      <div class="egr-total">Total gastado: <b id="egrTotal">$0,00</b></div>
+    </div>
+
     <div class="searchbox">
       <input id="name" type="text" placeholder="Ej: María Pérez" autocomplete="off">
       <button id="btn">Buscar</button>
@@ -102,6 +132,7 @@
     <div id="results"></div>
 
     <p class="foot">Si ves algún dato incorrecto, contactá a la organización.</p>
+    <p class="credit">Sistema creado por <a href="https://www.instagram.com/isiselinor/" target="_blank" rel="noopener">Isis Elinor</a></p>
   </div>
 
   <script>
@@ -135,6 +166,39 @@
     jsonp({ action: 'balance' })
       .then(function(d){ if(d && d.ok) renderBalance(d.balance, d.consolidado); })
       .catch(function(){ /* silencioso: si falla, no mostramos el panel */ });
+
+    // Cargar listado de egresos
+    jsonp({ action: 'gastos' })
+      .then(function(d){ if(d && d.ok) renderEgresos(d.items); })
+      .catch(function(){ /* silencioso */ });
+
+    function renderEgresos(items){
+      if(!items || !items.length) return;
+      document.getElementById('egrBody').innerHTML = items.map(function(e){
+        return '<tr>' +
+          '<td>' + esc(e.fecha) + '</td>' +
+          '<td>' + esc(e.comercio) + '</td>' +
+          '<td>' + (e.categoria ? '<span class="cat">' + esc(e.categoria) + '</span>' : '') + '</td>' +
+          '<td class="num">' + esc(e.montoFmt) + ' <span style="color:#7e88a6;font-size:12px">' + esc(e.moneda) + '</span></td>' +
+          '<td class="usd">' + (e.montoUSD ? '$' + esc(e.montoUSD) : '—') + '</td>' +
+        '</tr>';
+      }).join('');
+
+      // Total en USD
+      var totalUSD = 0, faltan = false;
+      items.forEach(function(e){
+        if(e.montoUSD == null){ faltan = true; return; }
+        totalUSD += parseFloat(String(e.montoUSD).replace(/\./g,'').replace(',', '.')) || 0;
+      });
+      document.getElementById('egrTotal').textContent = '$' + fmt(totalUSD) + (faltan ? ' (parcial)' : '');
+      document.getElementById('egresos').style.display = 'block';
+    }
+
+    function fmt(n){
+      var p = (Math.round(n*100)/100).toFixed(2).split('.');
+      p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return p[0] + ',' + p[1];
+    }
 
     function renderBalance(rows, cons){
       if((!rows || !rows.length) && !cons) return;
