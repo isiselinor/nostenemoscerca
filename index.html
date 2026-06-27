@@ -105,7 +105,7 @@
     <div id="balance" class="raised" style="display:none">
       <h2>Transparencia — Recaudado · Gastado · Saldo</h2>
       <div id="usdBox"></div>
-      <div id="detLabel" style="display:none; color:var(--muted); font-size:12px; letter-spacing:.4px; text-transform:uppercase; font-weight:700; margin:4px 2px 10px">Detalle por moneda</div>
+      <div id="detLabel" style="display:none; color:var(--muted); font-size:12px; letter-spacing:.4px; text-transform:uppercase; font-weight:700; margin:4px 2px 10px">Recaudado por moneda</div>
       <div id="balanceGrid" class="raised-grid"></div>
       <p style="color:#7e88a6; font-size:11px; margin:10px 2px 0">Solo se cuentan donaciones verificadas. El consolidado en USD usa el tipo de cambio cargado manualmente.</p>
     </div>
@@ -223,13 +223,11 @@
       document.getElementById('balanceGrid').innerHTML = rows.map(function(b){
         var usd = b.sinTasa
           ? '<div class="bal-line saldo"><span>En USD</span><b class="red">falta tasa</b></div>'
-          : '<div class="bal-line saldo"><span>Recaudado USD</span><b class="pos">$' + esc(b.recaudadoUSD) + '</b></div>' +
-            '<div class="bal-line"><span>Gastado USD</span><b class="neg">$' + esc(b.gastadoUSD) + '</b></div>';
+          : '<div class="bal-line saldo"><span>Recaudado USD</span><b class="pos">$' + esc(b.recaudadoUSD) + '</b></div>';
         var tasa = b.sinTasa ? '' : ' <span style="color:#7e88a6;font-weight:400;font-size:12px">(1 USD = ' + esc(b.tasa) + ')</span>';
         return '<div class="bal-item">' +
           '<div class="cur">' + esc(b.moneda) + tasa + '</div>' +
           '<div class="bal-line"><span>Recaudado</span><b>' + esc(b.recaudadoOrig) + '</b></div>' +
-          '<div class="bal-line"><span>Gastado</span><b>' + esc(b.gastadoOrig) + '</b></div>' +
           usd +
         '</div>';
       }).join('');
