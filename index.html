@@ -87,7 +87,8 @@
       text-transform:uppercase; letter-spacing:.4px; padding:8px 10px; border-bottom:1px solid var(--line)}
     table.egr td{padding:10px; border-bottom:1px solid var(--line); color:var(--text)}
     table.egr td.num{text-align:right; white-space:nowrap}
-    table.egr td.usd{text-align:right; color:var(--accent); font-weight:700; white-space:nowrap}
+    table.egr td.usd{text-align:right; color:var(--accent); font-weight:700; white-space:nowrap; font-size:15px}
+    table.egr td.orig{text-align:right; color:#7e88a6; font-size:12px; white-space:nowrap}
     table.egr tr:last-child td{border-bottom:none}
     .cat{display:inline-block; background:rgba(255,255,255,.06); border:1px solid var(--line);
       border-radius:999px; padding:2px 9px; font-size:12px; color:var(--muted)}
@@ -114,7 +115,7 @@
       <div class="egr-scroll">
         <table class="egr">
           <thead>
-            <tr><th>Fecha</th><th>Comercio</th><th>Categoría</th><th>Monto</th><th>En USD</th></tr>
+            <tr><th>Fecha</th><th>Comercio</th><th>Categoría</th><th>Gasto (USD)</th><th>Ref. original</th></tr>
           </thead>
           <tbody id="egrBody"></tbody>
         </table>
@@ -179,8 +180,8 @@
           '<td>' + esc(e.fecha) + '</td>' +
           '<td>' + esc(e.comercio) + '</td>' +
           '<td>' + (e.categoria ? '<span class="cat">' + esc(e.categoria) + '</span>' : '') + '</td>' +
-          '<td class="num">' + esc(e.montoFmt) + ' <span style="color:#7e88a6;font-size:12px">' + esc(e.moneda) + '</span></td>' +
           '<td class="usd">' + (e.montoUSD ? '$' + esc(e.montoUSD) : '—') + '</td>' +
+          '<td class="orig">' + esc(e.montoFmt) + ' ' + esc(e.moneda) + '</td>' +
         '</tr>';
       }).join('');
 
