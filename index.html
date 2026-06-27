@@ -18,6 +18,12 @@
     .wrap{max-width:760px; margin:0 auto}
     h1{font-size:22px; margin:0 0 4px}
     .sub{color:var(--muted); font-size:14px; margin:0 0 20px}
+    .donate{display:flex; align-items:center; justify-content:center; gap:8px;
+      width:100%; padding:16px 20px; margin:0 0 22px; border-radius:14px;
+      background:var(--accent); color:#1a1300; font-weight:800; font-size:17px;
+      text-decoration:none; box-shadow:0 4px 18px rgba(255,210,77,.25);
+      transition:transform .08s ease, box-shadow .2s ease}
+    .donate:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(255,210,77,.35)}
     .raised{
       background:linear-gradient(135deg,#1a2138,#222c4a);
       border:1px solid var(--line); border-radius:16px;
@@ -101,6 +107,8 @@
   <div class="wrap">
     <h1>💛 Consulta de Donaciones</h1>
     <p class="sub">Escribí tu nombre completo para ver tus donaciones registradas y su estado de verificación.</p>
+
+    <a class="donate" href="https://forms.gle/QuTy9bVdXhyXMJ539" target="_blank" rel="noopener">💛 Quiero donar</a>
 
     <div id="balance" class="raised" style="display:none">
       <h2>Transparencia — Recaudado · Gastado · Saldo</h2>
