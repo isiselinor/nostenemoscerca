@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consulta de Donaciones</title>
+  <style>
+    :root{
+      --bg:#0f1424; --card:#1a2138; --line:#2a3350;
+      --text:#eef1f8; --muted:#9aa4c0; --accent:#ffd24d;
+      --ok:#34d399; --pend:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg); color:var(--text); padding:24px 16px; min-height:100vh;
+    }
+    .wrap{max-width:760px; margin:0 auto}
+    h1{font-size:22px; margin:0 0 4px}
+    .sub{color:var(--muted); font-size:14px; margin:0 0 20px}
+    .raised{
+      background:linear-gradient(135deg,#1a2138,#222c4a);
+      border:1px solid var(--line); border-radius:16px;
+      padding:18px 18px 14px; margin-bottom:22px;
+    }
+    .raised h2{font-size:13px; letter-spacing:.5px; text-transform:uppercase;
+      color:var(--muted); margin:0 0 12px; font-weight:700}
+    .raised-grid{display:flex; flex-wrap:wrap; gap:12px}
+    .raised-item{flex:1 1 150px; background:rgba(255,255,255,.04);
+      border:1px solid var(--line); border-radius:12px; padding:12px 14px}
+    .raised-item .cur{color:var(--muted); font-size:13px}
+    .raised-item .amt{color:var(--accent); font-size:22px; font-weight:800; margin:2px 0}
+    .raised-item .cnt{color:var(--muted); font-size:12px}
+    /* Tarjetas de balance */
+    .bal-item{flex:1 1 200px; background:rgba(255,255,255,.04);
+      border:1px solid var(--line); border-radius:12px; padding:14px}
+    .bal-item .cur{color:var(--text); font-weight:700; font-size:15px; margin-bottom:8px}
+    .bal-line{display:flex; justify-content:space-between; align-items:baseline;
+      font-size:14px; color:var(--muted); padding:3px 0}
+    .bal-line b{font-size:15px}
+    .bal-line .pos{color:var(--ok)}
+    .bal-line .neg{color:var(--pend)}
+    .bal-line.saldo{border-top:1px solid var(--line); margin-top:6px; padding-top:8px}
+    .bal-line.saldo span{color:var(--text); font-weight:700}
+    .bal-line .accent{color:var(--accent); font-size:18px; font-weight:800}
+    .bal-line .red{color:#ff6b6b; font-size:18px; font-weight:800}
+    /* Tarjeta consolidado USD */
+    .usd{background:linear-gradient(135deg,#22324f,#2c3f63);
+      border:1px solid var(--accent); border-radius:14px; padding:16px 18px; margin-bottom:14px}
+    .usd .lbl{color:var(--accent); font-size:12px; letter-spacing:.5px; text-transform:uppercase; font-weight:700}
+    .usd-row{display:flex; flex-wrap:wrap; gap:18px; margin-top:8px; align-items:baseline}
+    .usd-row .k{color:var(--muted); font-size:13px; display:block}
+    .usd-row .v{font-size:20px; font-weight:800}
+    .usd .warn{color:#ffb4b4; font-size:12px; margin-top:8px}
+    .searchbox{display:flex; gap:8px; margin-bottom:20px}
+    input[type=text]{
+      flex:1; padding:14px 16px; border-radius:12px; border:1px solid var(--line);
+      background:var(--card); color:var(--text); font-size:16px; outline:none;
+    }
+    input[type=text]:focus{border-color:var(--accent)}
+    button{
+      padding:14px 20px; border:none; border-radius:12px; cursor:pointer;
+      background:var(--accent); color:#1a1300; font-weight:700; font-size:15px;
+    }
+    button:disabled{opacity:.6; cursor:default}
+    .status{color:var(--muted); font-size:14px; margin:10px 2px}
+    .totals{display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 18px}
+    .chip{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; font-size:14px}
+    .chip b{color:var(--accent); display:block; font-size:18px; margin-top:2px}
+    .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px}
+    .row1{display:flex; justify-content:space-between; align-items:baseline; gap:12px}
+    .amount{font-size:20px; font-weight:700}
+    .moneda{color:var(--muted); font-size:13px}
+    .meta{color:var(--muted); font-size:13px; margin-top:8px; line-height:1.5}
+    .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:12px; font-weight:700; margin-top:8px}
+    .b-ok{background:rgba(52,211,153,.15); color:var(--ok)}
+    .b-pend{background:rgba(245,158,11,.15); color:var(--pend)}
+    .empty{color:var(--muted); text-align:center; padding:30px 10px}
+    .foot{color:var(--muted); font-size:12px; text-align:center; margin-top:24px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>💛 Consulta de Donaciones</h1>
+    <p class="sub">Escribí tu nombre completo para ver tus donaciones registradas y su estado de verificación.</p>
+
+    <div id="balance" class="raised" style="display:none">
+      <h2>Transparencia — Recaudado · Gastado · Saldo</h2>
+      <div id="usdBox"></div>
+      <div id="detLabel" style="display:none; color:var(--muted); font-size:12px; letter-spacing:.4px; text-transform:uppercase; font-weight:700; margin:4px 2px 10px">Detalle por moneda</div>
+      <div id="balanceGrid" class="raised-grid"></div>
+      <p style="color:#7e88a6; font-size:11px; margin:10px 2px 0">Solo se cuentan donaciones verificadas. El consolidado en USD usa el tipo de cambio cargado manualmente.</p>
+    </div>
+
+    <div class="searchbox">
+      <input id="name" type="text" placeholder="Ej: María Pérez" autocomplete="off">
+      <button id="btn">Buscar</button>
+    </div>
+
+    <div id="status" class="status"></div>
+    <div id="totals" class="totals"></div>
+    <div id="results"></div>
+
+    <p class="foot">Si ves algún dato incorrecto, contactá a la organización.</p>
+  </div>
+
+  <script>
+    /* ===================================================================
+       ⬇️  PEGÁ AQUÍ TU URL DE APPS SCRIPT (la que termina en /exec)
+       =================================================================== */
+    var API_URL = "https://script.google.com/macros/s/AKfycbzMUJ9-2Fl4SPxt1FE5ymN-Jui2ixcwq7V1vXwqM_x21TcOg1Ayi1b9TYu9YsuRDP4BGw/exec";
+    /* =================================================================== */
+
+    var input = document.getElementById('name');
+    var btn = document.getElementById('btn');
+    btn.addEventListener('click', buscar);
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') buscar(); });
+
+    // Llamada JSONP (evita problemas de CORS entre Netlify y Google)
+    function jsonp(params){
+      return new Promise(function(resolve, reject){
+        var cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+        var s = document.createElement('script');
+        var timer = setTimeout(function(){ cleanup(); reject(new Error('Tiempo de espera agotado')); }, 20000);
+        function cleanup(){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); clearTimeout(timer); }
+        window[cb] = function(data){ cleanup(); resolve(data); };
+        var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k)+'='+encodeURIComponent(params[k]); }).join('&');
+        s.src = API_URL + '?' + qs + '&callback=' + cb;
+        s.onerror = function(){ cleanup(); reject(new Error('No se pudo conectar con el servidor')); };
+        document.body.appendChild(s);
+      });
+    }
+
+    // Cargar balance (recaudado / gastado / saldo) al abrir
+    jsonp({ action: 'balance' })
+      .then(function(d){ if(d && d.ok) renderBalance(d.balance, d.consolidado); })
+      .catch(function(){ /* silencioso: si falla, no mostramos el panel */ });
+
+    function renderBalance(rows, cons){
+      if((!rows || !rows.length) && !cons) return;
+
+      // Consolidado en USD (destacado)
+      if(cons){
+        var neg = (cons.saldoUSDNum < 0);
+        var warn = (cons.faltanTasa && cons.faltanTasa.length)
+          ? '<div class="warn">⚠ Faltan tasas para: ' + esc(cons.faltanTasa.join(', ')) + '. Cargalas en la hoja "Tasas".</div>' : '';
+        document.getElementById('usdBox').innerHTML =
+          '<div class="usd"><div class="lbl">Total global en dólares</div>' +
+          '<div class="usd-row">' +
+            '<div><span class="k">Total recaudado</span><span class="v" style="color:var(--ok)">$' + esc(cons.recaudadoUSD) + '</span></div>' +
+            '<div><span class="k">(−) Egresos</span><span class="v" style="color:var(--pend)">$' + esc(cons.gastadoUSD) + '</span></div>' +
+            '<div><span class="k">= Saldo global</span><span class="v" style="color:' + (neg ? '#ff6b6b' : 'var(--accent)') + '">$' + esc(cons.saldoUSD) + '</span></div>' +
+          '</div>' + warn + '</div>';
+      }
+
+      if(!rows || !rows.length){ document.getElementById('balance').style.display = 'block'; return; }
+      document.getElementById('detLabel').style.display = 'block';
+      document.getElementById('balanceGrid').innerHTML = rows.map(function(b){
+        var usd = b.sinTasa
+          ? '<div class="bal-line saldo"><span>En USD</span><b class="red">falta tasa</b></div>'
+          : '<div class="bal-line saldo"><span>Recaudado USD</span><b class="pos">$' + esc(b.recaudadoUSD) + '</b></div>' +
+            '<div class="bal-line"><span>Gastado USD</span><b class="neg">$' + esc(b.gastadoUSD) + '</b></div>';
+        var tasa = b.sinTasa ? '' : ' <span style="color:#7e88a6;font-weight:400;font-size:12px">(1 USD = ' + esc(b.tasa) + ')</span>';
+        return '<div class="bal-item">' +
+          '<div class="cur">' + esc(b.moneda) + tasa + '</div>' +
+          '<div class="bal-line"><span>Recaudado</span><b>' + esc(b.recaudadoOrig) + '</b></div>' +
+          '<div class="bal-line"><span>Gastado</span><b>' + esc(b.gastadoOrig) + '</b></div>' +
+          usd +
+        '</div>';
+      }).join('');
+      document.getElementById('balance').style.display = 'block';
+    }
+
+    function buscar(){
+      var name = input.value.trim();
+      var st = document.getElementById('status');
+      var res = document.getElementById('results');
+      var tot = document.getElementById('totals');
+      res.innerHTML = ''; tot.innerHTML = '';
+      if(!name){ st.textContent = 'Escribí tu nombre completo.'; return; }
+      st.textContent = 'Buscando…';
+      btn.disabled = true;
+      jsonp({ action: 'search', name: name })
+        .then(render)
+        .catch(function(err){ st.textContent = 'Ocurrió un error: ' + err.message; btn.disabled = false; });
+    }
+
+    function render(data){
+      btn.disabled = false;
+      var st = document.getElementById('status');
+      var res = document.getElementById('results');
+      var tot = document.getElementById('totals');
+
+      if(!data || !data.ok){ st.textContent = (data && data.msg) || 'Sin resultados.'; return; }
+      if(data.count === 0){
+        st.textContent = '';
+        res.innerHTML = '<div class="empty">No encontramos donaciones con ese nombre.<br>Revisá que esté escrito igual que en el formulario.</div>';
+        return;
+      }
+
+      st.textContent = 'Se encontraron ' + data.count + ' donación(es).';
+      tot.innerHTML = data.totals.map(function(t){
+        return '<div class="chip">Total ' + esc(t.moneda) + '<b>' + esc(t.total) + '</b></div>';
+      }).join('');
+
+      res.innerHTML = data.items.map(function(it){
+        var badge = it.verificada
+          ? '<span class="badge b-ok">✓ Verificada</span>'
+          : '<span class="badge b-pend">⏳ Pendiente de verificación</span>';
+        return '<div class="card">' +
+          '<div class="row1"><span class="amount">' + esc(it.montoFmt) + '</span>' +
+          '<span class="moneda">' + esc(it.moneda) + '</span></div>' +
+          '<div class="meta">' +
+            'Método: ' + esc(it.metodo) + '<br>' +
+            (it.fecha ? 'Fecha: ' + esc(it.fecha) + '<br>' : '') +
+            (it.codigo ? 'Código de operación: ' + esc(it.codigo) : '') +
+          '</div>' + badge +
+        '</div>';
+      }).join('');
+    }
+
+    function esc(s){
+      return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+  </script>
+</body>
+</html>

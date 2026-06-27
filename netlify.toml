@@ -1,0 +1,15 @@
+# Configuración de Netlify para un sitio estático (sin build)
+# El sitio es un único index.html que consume la API de Google Apps Script por JSONP.
+
+[build]
+  # No hay proceso de compilación: se publica la raíz del repo tal cual.
+  publish = "."
+  command = ""
+
+# Cabeceras de seguridad básicas (opcional, recomendado)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer-when-downgrade"
