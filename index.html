@@ -101,14 +101,59 @@
     .egr-total{display:flex; justify-content:flex-end; gap:10px; align-items:baseline;
       margin-top:12px; font-size:14px; color:var(--muted)}
     .egr-total b{color:var(--accent); font-size:18px}
+    /* Logo / encabezado */
+    .brand{display:flex; align-items:center; gap:10px; margin:0 0 4px}
+    .brand .heart{font-size:26px}
+    .logo{font-size:26px; font-weight:900; letter-spacing:.3px; margin:0; line-height:1.1}
+    .logo .c1{color:var(--text)} .logo .c2{color:var(--accent)}
+    /* Contador de donantes */
+    .counter{display:flex; align-items:center; gap:12px; background:var(--card);
+      border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin:0 0 16px}
+    .counter .num{font-size:30px; font-weight:900; color:var(--accent); line-height:1; min-width:1ch}
+    .counter .txt{color:var(--muted); font-size:14px; line-height:1.3}
+    /* Sección cómo usar */
+    .how{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:22px}
+    .how h2{font-size:15px; margin:0 0 12px; color:var(--text)}
+    .how h3{font-size:13px; text-transform:uppercase; letter-spacing:.4px; color:var(--accent); margin:14px 0 8px}
+    .how ol{margin:0; padding-left:20px}
+    .how li{color:var(--text); font-size:14px; line-height:1.55; margin-bottom:7px}
+    .how li span.dim{color:var(--muted)}
+    /* Resultados de búsqueda en vivo */
+    .searchwrap{margin-bottom:8px}
+    .hint{color:#7e88a6; font-size:12px; margin:2px 2px 14px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>💛 Consulta de Donaciones</h1>
-    <p class="sub">Escribí tu nombre completo para ver tus donaciones registradas y su estado de verificación.</p>
+    <div class="brand">
+      <span class="heart">💛</span>
+      <h1 class="logo"><span class="c1">Nos Tenemos</span> <span class="c2">Cerca</span></h1>
+    </div>
+    <p class="sub">Fondos para llevar comida, medicinas e insumos a familias en Venezuela. Doná en la moneda que tengas: todo se convierte a un fondo único en dólares para que la inflación no se lo coma. Acá ves cuánto se recaudó, en qué se gastó y podés buscar tu aporte.</p>
+
+    <div class="counter">
+      <span class="num" id="donorNum">·</span>
+      <span class="txt"><b id="donorWord">personas</b> ya hicieron su aporte. Sumate.</span>
+    </div>
 
     <a class="donate" href="https://forms.gle/QuTy9bVdXhyXMJ539" target="_blank" rel="noopener">💛 Quiero donar</a>
+
+    <div class="how">
+      <h2>Cómo usar esta página</h2>
+      <h3>Cómo donar (2 minutos)</h3>
+      <ol>
+        <li>Tocá el botón amarillo <b>"💛 Quiero donar"</b>.</li>
+        <li>Se abre un formulario. Elegí el método que te quede más fácil <span class="dim">(Brubank, Mercado Pago, USDT, Pago Móvil, COP)</span>.</li>
+        <li>Hacé la transferencia y completá el formulario con tu nombre, el monto y el número o código de la operación.</li>
+        <li>Listo. Tu aporte queda registrado.</li>
+      </ol>
+      <h3>Cómo ver tu aporte</h3>
+      <ol>
+        <li>Bajá hasta el buscador de más abajo.</li>
+        <li>Empezá a escribir tu nombre <span class="dim">(no hace falta escribirlo igual que en el formulario: con tu nombre, un apellido o unas letras alcanza, los resultados aparecen solos).</span></li>
+        <li>Tocá tu donación para ver el monto, la fecha y su estado: <b>✓ Verificada</b> o <b>⏳ Pendiente</b>.</li>
+      </ol>
+    </div>
 
     <div id="balance" class="raised" style="display:none">
       <h2>Transparencia — Recaudado · Gastado · Saldo</h2>
@@ -131,16 +176,19 @@
       <div class="egr-total">Total gastado: <b id="egrTotal">$0,00</b></div>
     </div>
 
-    <div class="searchbox">
-      <input id="name" type="text" placeholder="Ej: María Pérez" autocomplete="off">
-      <button id="btn">Buscar</button>
+    <div id="buscador" class="raised">
+      <h2>Buscá tu aporte</h2>
+      <div class="searchbox searchwrap">
+        <input id="name" type="text" placeholder="Escribí tu nombre o apellido…" autocomplete="off">
+        <button id="btn">Buscar</button>
+      </div>
+      <div class="hint">No hace falta escribirlo completo: con tu nombre, un apellido o unas letras alcanza. Los resultados aparecen mientras escribís.</div>
+      <div id="status" class="status"></div>
+      <div id="totals" class="totals"></div>
+      <div id="results"></div>
     </div>
 
-    <div id="status" class="status"></div>
-    <div id="totals" class="totals"></div>
-    <div id="results"></div>
-
-    <p class="foot">Si ves algún dato incorrecto, contactá a la organización.</p>
+    <p class="foot">Si ves algún dato incorrecto, contactá a la organización. Administra las donaciones: <a href="https://www.instagram.com/hellmamba/" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:700">@hellmamba</a></p>
     <p class="credit">Sistema creado por <a href="https://www.instagram.com/isiselinor/" target="_blank" rel="noopener">Isis Elinor</a></p>
   </div>
 
@@ -155,6 +203,21 @@
     var btn = document.getElementById('btn');
     btn.addEventListener('click', buscar);
     input.addEventListener('keydown', function(e){ if(e.key === 'Enter') buscar(); });
+
+    // Búsqueda en vivo mientras se escribe (con espera para no saturar)
+    var liveTimer = null;
+    input.addEventListener('input', function(){
+      clearTimeout(liveTimer);
+      var q = input.value.trim();
+      if(q.length < 2){
+        document.getElementById('status').textContent = '';
+        document.getElementById('totals').innerHTML = '';
+        document.getElementById('results').innerHTML = '';
+        return;
+      }
+      document.getElementById('status').textContent = 'Buscando…';
+      liveTimer = setTimeout(buscar, 350);
+    });
 
     // Llamada JSONP (evita problemas de CORS entre Netlify y Google)
     function jsonp(params){
@@ -171,10 +234,21 @@
       });
     }
 
-    // Cargar balance (recaudado / gastado / saldo) al abrir
+    // Cargar balance (recaudado / gastado / saldo) y contador al abrir
     jsonp({ action: 'balance' })
-      .then(function(d){ if(d && d.ok) renderBalance(d.balance, d.consolidado); })
+      .then(function(d){
+        if(d && d.ok){
+          renderBalance(d.balance, d.consolidado);
+          renderDonors(d.donantes);
+        }
+      })
       .catch(function(){ /* silencioso: si falla, no mostramos el panel */ });
+
+    function renderDonors(n){
+      if(n == null) return;
+      document.getElementById('donorNum').textContent = n;
+      document.getElementById('donorWord').textContent = (n === 1) ? 'persona' : 'personas';
+    }
 
     // Cargar listado de egresos
     jsonp({ action: 'gastos' })
@@ -265,7 +339,7 @@
       if(!data || !data.ok){ st.textContent = (data && data.msg) || 'Sin resultados.'; return; }
       if(data.count === 0){
         st.textContent = '';
-        res.innerHTML = '<div class="empty">No encontramos donaciones con ese nombre.<br>Revisá que esté escrito igual que en el formulario.</div>';
+        res.innerHTML = '<div class="empty">Todavía no encontramos donaciones con ese nombre.<br>Probá con tu apellido o solo unas letras.</div>';
         return;
       }
 
